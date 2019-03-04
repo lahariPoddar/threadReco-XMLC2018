@@ -30,6 +30,9 @@ Kindly cite our paper if you use the sources.
       * postID : An ID of the thread (not used by the model. For cross-reference purposes)
       * postText : textual content of the thread
       * users: List of comma-separated user ids of users who have interacted with the post
+      
+      
+      Update line 20 in ```threadReco_data.py``` with the data file name.
 
 * To train and test the model, run the following
 
