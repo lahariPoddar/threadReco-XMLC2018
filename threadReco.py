@@ -36,6 +36,14 @@ def stacking(x):
         return K.stack(x,axis=1)
 
 def init_model(num_users,data=None):
+	def get_csa_layer(max_len, bigru_dim, out_size):
+		y = Sequential()
+		y.add(Flatten(input_shape=(max_len,bigru_dim)))
+		y.add(Dense(max_len,activation='softmax', input_shape=(out_size,)))
+		y.add(RepeatVector(bigru_dim))
+		y.add(Permute((2,1)))
+		return y
+
 	print('Compiling model...')
 	
 	embedding_matrix, len_word_index = data
@@ -53,17 +61,11 @@ def init_model(num_users,data=None):
 	x.add(Bidirectional(GRU(gru_dim, return_sequences = True)))
 	
 	post = x(inp)
-		
-	y = Sequential()
-	y.add(Flatten(input_shape=(max_len,bigru_dim)))
-	y.add(Dense(max_len,activation='softmax', input_shape=(out_size,)))
-	y.add(RepeatVector(bigru_dim))
-	y.add(Permute((2,1)))
-	
 
 	posts = []
-	for i in range(0,clusters): 
-		post_att = y(post)
+	for i in range(0,clusters):
+		csa_layer = get_csa_layer(max_len, bigru_dim, out_size) 
+		post_att = csa_layer(post)
 		post_i = Multiply()([post_att,post])
 		post_i = Lambda(sum_att,output_shape=(bigru_dim,))(post_i)
 		posts.append(post_i)
@@ -76,7 +78,7 @@ def init_model(num_users,data=None):
 
 	output = Dense(num_users, activation='sigmoid') (out)
 	model = Model(inputs=[inp], outputs=[output])
-	print(y.summary())
+	print(model.summary())
 	return model
 
 
